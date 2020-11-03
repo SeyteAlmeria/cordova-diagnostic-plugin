@@ -15,7 +15,7 @@ static Diagnostic* diagnostic;
 
 // Internal constants
 static NSString*const LOG_TAG = @"Diagnostic_Location[native]";
-
+BOOL shouldRequestAlways = false;
 
 /********************************/
 #pragma mark - Plugin API
@@ -79,8 +79,17 @@ static NSString*const LOG_TAG = @"Diagnostic_Location[native]";
             if ([CLLocationManager instancesRespondToSelector:@selector(requestWhenInUseAuthorization)])
             {
                 BOOL always = [[command argumentAtIndex:0] boolValue];
+                
+#if defined(__IPHONE_13_4) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_4
+                self.shouldRequestAlways = always;
+
+                NSAssert([[[NSBundle mainBundle] infoDictionary] valueForKey:@"NSLocationWhenInUseUsageDescription"], @"Your app must have a value for NSLocationWhenInUseUsageDescription in its Info.plist");
+                [self.locationManager requestWhenInUseAuthorization];
+                [diagnostic logDebug:@"Requesting location authorization: when in use"];
+
+#else
                 if(always){
-                    NSAssert([[[NSBundle mainBundle] infoDictionary] valueForKey:@"NSLocationAlwaysAndWhenInUseUsageDescription"], @"Your app must have a value for NSLocationAlwaysAndWhenInUseUsageDescription in its Info.plist");
+                    NSAssert([[[NSBundle mainBundle] infoDictionary] valueForKey:@"NSLocationAlwaysUsageDescription"], @"Your app must have a value for NSLocationAlwaysUsageDescription in its Info.plist");
                     [self.locationManager requestAlwaysAuthorization];
                     [diagnostic logDebug:@"Requesting location authorization: always"];
                 }else{
@@ -88,6 +97,10 @@ static NSString*const LOG_TAG = @"Diagnostic_Location[native]";
                     [self.locationManager requestWhenInUseAuthorization];
                     [diagnostic logDebug:@"Requesting location authorization: when in use"];
                 }
+
+#endif
+                
+
             }
         }
         @catch (NSException *exception) {
@@ -178,7 +191,7 @@ static NSString*const LOG_TAG = @"Diagnostic_Location[native]";
     }else if(authStatus == kCLAuthorizationStatusAuthorizedAlways){
         status = AUTHORIZATION_GRANTED;
     }else if(authStatus == kCLAuthorizationStatusAuthorizedWhenInUse){
-        status = @"authorized_when_in_use";
+        status = AUTHORIZATION_WHEN_IN_USE;
     }
     return status;
 }
@@ -267,9 +280,22 @@ static NSString*const LOG_TAG = @"Diagnostic_Location[native]";
     }
     self.currentLocationAuthorizationStatus = locationAuthorizationStatus;
 
+    
+    
+    
     if(locationAuthorizationStatusChanged){
         [diagnostic logDebug:[NSString stringWithFormat:@"Location authorization status changed to: %@", locationAuthorizationStatus]];
 
+        NSString* statusStr = [self getLocationAuthorizationStatusAsString:authStatus];
+        
+        
+#if defined(__IPHONE_13_4) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_4
+        if(statusStr == AUTHORIZATION_WHEN_IN_USE){
+            NSAssert([[[NSBundle mainBundle] infoDictionary] valueForKey:@"NSLocationAlwaysAndWhenInUseUsageDescription"], @"Your app must have a value for NSLocationAlwaysAndWhenInUseUsageDescription in its Info.plist");
+            [self.locationManager requestAlwaysAuthorization];
+            [diagnostic logDebug:@"Requesting location authorization: always"];
+        }
+#endif
         if(self.locationRequestCallbackId != nil){
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:locationAuthorizationStatus];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:self.locationRequestCallbackId];

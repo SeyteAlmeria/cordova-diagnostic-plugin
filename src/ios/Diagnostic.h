@@ -20,6 +20,7 @@ extern NSString*const UNKNOWN;
 extern NSString*const AUTHORIZATION_NOT_DETERMINED;
 extern NSString*const AUTHORIZATION_DENIED;
 extern NSString*const AUTHORIZATION_GRANTED;
+extern NSString*const AUTHORIZATION_WHEN_IN_USE;
 
 @interface Diagnostic : CDVPlugin
 

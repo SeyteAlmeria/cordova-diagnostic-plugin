@@ -16,6 +16,7 @@ NSString*const UNKNOWN = @"unknown";
 NSString*const AUTHORIZATION_NOT_DETERMINED = @"not_determined";
 NSString*const AUTHORIZATION_DENIED = @"denied_always";
 NSString*const AUTHORIZATION_GRANTED = @"authorized";
+NSString*const AUTHORIZATION_WHEN_IN_USE = @"authorized_when_in_use";
 
 // Internal constants
 static NSString*const LOG_TAG = @"Diagnostic[native]";

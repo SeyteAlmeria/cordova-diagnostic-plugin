@@ -19,6 +19,7 @@
 @property (nonatomic, retain) NSString* locationRequestCallbackId;
 @property (nonatomic, retain) NSString* currentLocationAuthorizationStatus;
 @property (nonatomic, retain) NSString* currentLocationAccuracyAuthorization;
+@property BOOL shouldRequestAlways;
 
 - (void) isLocationAvailable: (CDVInvokedUrlCommand*)command;
 - (void) isLocationEnabled: (CDVInvokedUrlCommand*)command;
